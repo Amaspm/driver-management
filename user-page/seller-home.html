@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Home - Driver Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-green-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Driver Management - Penjual</h1>
+            <a href="login.html" class="bg-green-700 px-4 py-2 rounded hover:bg-green-800">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8 px-4">
+        <div class="max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-center">Daftar Pesanan</h2>
+            
+            <div id="ordersList" class="space-y-4">
+                <!-- Orders will be loaded here -->
+            </div>
+            
+            <div id="noOrders" class="text-center text-gray-600 py-8" style="display: none;">
+                Tidak ada pesanan yang menunggu konfirmasi
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadOrders() {
+            const order = JSON.parse(localStorage.getItem('currentOrder'));
+            const ordersList = document.getElementById('ordersList');
+            const noOrders = document.getElementById('noOrders');
+            
+            if (order && order.status === 'MENUNGGU KONFIRMASI PENJUAL') {
+                ordersList.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Pesanan Baru</h3>
+                                <p class="text-gray-600">${order.timestamp}</p>
+                            </div>
+                            <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                                ${order.status}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p><strong>Barang:</strong> ${order.barang}</p>
+                            <p><strong>Tujuan:</strong> ${order.kota}</p>
+                        </div>
+                        
+                        <button onclick="confirmOrder()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200">
+                            Konfirmasi Barang Siap
+                        </button>
+                    </div>
+                `;
+                noOrders.style.display = 'none';
+            } else {
+                ordersList.innerHTML = '';
+                noOrders.style.display = 'block';
+            }
+        }
+
+        async function confirmOrder() {
+            const order = JSON.parse(localStorage.getItem('currentOrder'));
+            if (order) {
+                try {
+                    // Send to Django backend with correct order_id
+                    const response = await fetch('http://localhost:8001/api/order/confirmed/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            order_id: order.order_id || 'order_' + Date.now(),
+                            pickup: 'Alamat Pickup Dummy',
+                            tujuan: order.barang + ' ke ' + order.kota,
+                            kota: order.kota
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        order.status = 'MENUNGGU DRIVER';
+                        localStorage.setItem('currentOrder', JSON.stringify(order));
+                        
+                        alert('Pesanan dikonfirmasi dan dikirim ke driver online!');
+                        loadOrders();
+                    } else {
+                        const errorData = await response.json();
+                        alert('Gagal mengirim pesanan ke driver: ' + (errorData.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Load orders on page load
+        window.onload = function() {
+            loadOrders();
+            
+            // Auto refresh every 5 seconds to check for new orders
+            setInterval(loadOrders, 5000);
+        };
+    </script>
+</body>
+</html>

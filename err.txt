@@ -1,0 +1,13 @@
+I/AssistStructure(26852): Flattened final assist data: 476 bytes, containing 1 windows, 3 views
+D/InsetsController(26852): show(ime(), fromIme=true)
+I/flutter (26852): === LOGIN ATTEMPT START ===
+I/flutter (26852): Email: kuvuki@kuvuki.com
+I/flutter (26852): Password length: 9
+I/flutter (26852): Attempting login with: kuvuki@kuvuki.com
+I/flutter (26852): Attempting login to: http://192.168.137.135:8001/api/drivers/login/
+I/flutter (26852): Username: kuvuki@kuvuki.com
+I/flutter (26852): Response status: 200
+I/flutter (26852): Response body: {"token":"86d929ca3d602830f0972df1de3666e3ba454060","driver_id":12,"status":"active","has_vehicle":true,"message":"Login successful"}
+I/flutter (26852): Login success data: {token: 86d929ca3d602830f0972df1de3666e3ba454060, driver_id: 12, status: active, has_vehicle: true, message: Login successful}
+I/flutter (26852): Login error: type 'Null' is not a subtype of type 'int'
+I/flutter (26852): Login success: false

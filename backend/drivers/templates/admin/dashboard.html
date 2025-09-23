@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Driver Management</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .title { color: #dc3545; font-size: 24px; font-weight: bold; }
+        .logout-btn { background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { padding: 20px; border-bottom: 1px solid #dee2e6; font-weight: 600; color: #495057; }
+        .driver-item { padding: 20px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+        .driver-item:last-child { border-bottom: none; }
+        .driver-info h3 { color: #495057; margin-bottom: 5px; }
+        .driver-info p { color: #6c757d; margin: 2px 0; font-size: 14px; }
+        .status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .status.training { background: #17a2b8; color: white; }
+        .status.active { background: #28a745; color: white; }
+        .status.pending { background: #ffc107; color: #212529; }
+        .status.suspended { background: #dc3545; color: white; }
+        .status.rejected { background: #6c757d; color: white; }
+        .actions { display: flex; gap: 10px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-primary { background: #007bff; color: white; }
+        .messages { margin: 20px 0; }
+        .alert { padding: 12px; border-radius: 4px; margin-bottom: 10px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .empty { text-align: center; padding: 60px; color: #6c757d; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        .document-image { max-width: 100%; height: auto; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Admin Dashboard</h1>
+        <div>
+            <a href="{% url 'training_management' %}" class="logout-btn" style="background: #007bff; margin-right: 10px;">Training Content</a>
+            <span>Welcome, {{ user.username }}</span>
+            <a href="{% url 'admin_logout' %}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header">
+                Driver Management ({{ drivers.count }} drivers)
+            </div>
+            
+            {% if drivers %}
+                {% for driver in drivers %}
+                <div class="driver-item">
+                    <div class="driver-info">
+                        <h3><a href="{% url 'driver_detail' driver.id_driver %}" style="color: #495057; text-decoration: none;">{{ driver.nama }}</a></h3>
+                        <p><strong>Email:</strong> {{ driver.email }}</p>
+                        <p><strong>Phone:</strong> {{ driver.no_hp }}</p>
+                        <p><strong>NIK:</strong> {{ driver.nik }}</p>
+                        <p><strong>SIM:</strong> 
+                            <a href="#" onclick="showDocumentModal('sim', '{{ driver.no_sim }}', '{{ driver.jenis_sim }}', '{{ driver.tanggal_kedaluarsa_sim|default:"" }}', '{{ driver.foto_sim|default:"" }}')">{{ driver.no_sim }} ({{ driver.jenis_sim }})</a>
+                        </p>
+                        <p><strong>BPJS:</strong> 
+                            <a href="#" onclick="showDocumentModal('bpjs', '{{ driver.no_bpjs }}', '', '{{ driver.tanggal_kedaluarsa_bpjs|default:"" }}', '{{ driver.foto_bpjs|default:"" }}')">{{ driver.no_bpjs }}</a>
+                        </p>
+                        <p><strong>Sertifikat:</strong> 
+                            <a href="#" onclick="showDocumentModal('sertifikat', '{{ driver.no_sertifikat|default:"" }}', '', '{{ driver.tanggal_kedaluarsa_sertifikat|default:"" }}', '{{ driver.foto_sertifikat|default:"" }}')">{{ driver.no_sertifikat|default:"Tidak ada" }}</a>
+                        </p>
+                        <p><strong>Registered:</strong> {{ driver.wkt_daftar|date:"d M Y H:i" }}</p>
+                    </div>
+                    <div class="actions">
+                        <span class="status {{ driver.status }}">{{ driver.status }}</span>
+                        
+                        <a href="{% url 'driver_detail' driver.id_driver %}" class="btn btn-primary">View Details</a>
+                        
+                        {% if driver.status == 'pending' %}
+                            <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="accept">
+                                <button type="submit" class="btn btn-success">Accept</button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if driver.status == 'active' %}
+                            <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="suspend">
+                                <button type="submit" class="btn btn-danger">Suspend</button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if driver.status == 'suspended' %}
+                            <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="activate">
+                                <button type="submit" class="btn btn-success">Activate</button>
+                            </form>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'delete_driver' driver.id_driver %}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus driver {{ driver.nama }}? Aksi ini tidak dapat dibatalkan.')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <h3>No drivers registered yet</h3>
+                    <p>Drivers registered via mobile app will appear here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Document Modal -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Document Details</h2>
+            <div id="modalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDocumentModal(type, number, jenis, expiry, photo) {
+            const modal = document.getElementById('documentModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            let titleText = '';
+            let contentHtml = '';
+            
+            switch(type) {
+                case 'sim':
+                    titleText = 'Detail SIM';
+                    contentHtml = `
+                        <p><strong>Nomor SIM:</strong> ${number}</p>
+                        <p><strong>Jenis SIM:</strong> ${jenis}</p>
+                        <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                        ${photo ? `<img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto SIM">` : '<p>Foto tidak tersedia</p>'}
+                    `;
+                    break;
+                case 'bpjs':
+                    titleText = 'Detail BPJS';
+                    contentHtml = `
+                        <p><strong>Nomor BPJS:</strong> ${number}</p>
+                        <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                        ${photo ? `<img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto BPJS">` : '<p>Foto tidak tersedia</p>'}
+                    `;
+                    break;
+                case 'sertifikat':
+                    titleText = 'Detail Sertifikat';
+                    contentHtml = `
+                        <p><strong>Nomor Sertifikat:</strong> ${number || 'Tidak ada data'}</p>
+                        <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                        ${photo ? `<img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto Sertifikat">` : '<p>Foto tidak tersedia</p>'}
+                    `;
+                    break;
+            }
+            
+            title.textContent = titleText;
+            content.innerHTML = contentHtml;
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('documentModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('documentModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

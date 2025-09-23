@@ -1,0 +1,33 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTypeField = document.getElementById('id_content_type');
+    const youtubeField = document.querySelector('.field-youtube_url');
+    const mediaFileField = document.querySelector('.field-media_file');
+    
+    function toggleFields() {
+        const contentType = contentTypeField.value;
+        
+        if (contentType === 'video') {
+            if (youtubeField) youtubeField.style.display = 'block';
+            if (mediaFileField) mediaFileField.style.display = 'block';
+        } else if (contentType === 'image' || contentType === 'infographic') {
+            if (youtubeField) youtubeField.style.display = 'none';
+            if (mediaFileField) mediaFileField.style.display = 'block';
+        } else {
+            if (youtubeField) youtubeField.style.display = 'none';
+            if (mediaFileField) mediaFileField.style.display = 'none';
+        }
+    }
+    
+    if (contentTypeField) {
+        toggleFields();
+        contentTypeField.addEventListener('change', toggleFields);
+    }
+});
+</script>
+{% endblock %}

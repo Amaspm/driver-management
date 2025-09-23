@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ module.title }} - Training Module</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .title { color: #dc3545; font-size: 24px; font-weight: bold; }
+        .nav-btn { background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; margin-left: 10px; }
+        .nav-btn.success { background: #28a745; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { padding: 20px; border-bottom: 1px solid #dee2e6; font-weight: 600; color: #495057; display: flex; justify-content: space-between; align-items: center; }
+        .module-info { padding: 20px; border-bottom: 1px solid #dee2e6; }
+        .module-info h2 { color: #495057; margin-bottom: 10px; }
+        .module-info p { color: #6c757d; margin: 5px 0; }
+        .level { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .level.pemula { background: #28a745; color: white; }
+        .level.lanjutan { background: #007bff; color: white; }
+        .level.expert { background: #dc3545; color: white; }
+        .content-item, .quiz-item { padding: 15px 20px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+        .content-item:last-child, .quiz-item:last-child { border-bottom: none; }
+        .item-info h4 { color: #495057; margin-bottom: 5px; }
+        .item-info p { color: #6c757d; font-size: 14px; margin: 2px 0; }
+        .content-type { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .content-type.narration { background: #e3f2fd; color: #1976d2; }
+        .content-type.image { background: #f3e5f5; color: #7b1fa2; }
+        .content-type.video { background: #ffebee; color: #c62828; }
+        .content-type.infographic { background: #e8f5e8; color: #2e7d32; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .empty { text-align: center; padding: 40px; color: #6c757d; }
+        .messages { margin: 20px 0; }
+        .alert { padding: 12px; border-radius: 4px; margin-bottom: 10px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">{{ module.title }}</h1>
+        <div>
+            <a href="{% url 'training_management' %}" class="nav-btn">Back to Training</a>
+            <a href="{% url 'add_training_content' module.id %}" class="nav-btn success">Add Content</a>
+            <a href="{% url 'add_training_quiz' module.id %}" class="nav-btn success">Add Quiz</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-success">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Module Info -->
+        <div class="card">
+            <div class="module-info">
+                <h2>{{ module.title }}</h2>
+                <p><strong>Description:</strong> {{ module.description }}</p>
+                <p><strong>Instructor:</strong> {{ module.instructor }}</p>
+                <p><strong>Level:</strong> <span class="level {{ module.level }}">{{ module.get_level_display }}</span></p>
+                <p><strong>Order:</strong> {{ module.order }}</p>
+                <p><strong>Status:</strong> {% if module.is_active %}Active{% else %}Inactive{% endif %}</p>
+                <p><strong>Created:</strong> {{ module.created_at|date:"d M Y H:i" }}</p>
+            </div>
+        </div>
+        
+        <!-- Training Contents -->
+        <div class="card">
+            <div class="card-header">
+                <span>Training Contents ({{ contents.count }} items)</span>
+                <a href="{% url 'add_training_content' module.id %}" class="btn btn-success">Add Content</a>
+            </div>
+            
+            {% if contents %}
+                {% for content in contents %}
+                <div class="content-item">
+                    <div class="item-info">
+                        <h4>{{ content.title }}</h4>
+                        <p><span class="content-type {{ content.content_type }}">{{ content.get_content_type_display }}</span></p>
+                        <p><strong>Order:</strong> {{ content.order }}</p>
+                        {% if content.text_content %}
+                            <p><strong>Text:</strong> {{ content.text_content|truncatechars:100 }}</p>
+                        {% endif %}
+                        {% if content.media_content %}
+                            <p><strong>Media:</strong> {% if content.media_content|length > 50 %}Media attached{% else %}{{ content.media_content }}{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <a href="{% url 'edit_training_content' content.id %}" class="btn btn-primary">Edit</a>
+                        <form method="post" action="{% url 'delete_training_content' content.id %}" style="display: inline;" onsubmit="return confirm('Hapus konten ini?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <h4>No content added yet</h4>
+                    <p>Add narration, images, videos, or infographics to this module</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quiz Questions -->
+        <div class="card">
+            <div class="card-header">
+                <span>Quiz Questions ({{ quizzes.count }} questions)</span>
+                <a href="{% url 'add_training_quiz' module.id %}" class="btn btn-success">Add Quiz</a>
+            </div>
+            
+            {% if quizzes %}
+                {% for quiz in quizzes %}
+                <div class="quiz-item">
+                    <div class="item-info">
+                        <h4>Question {{ quiz.order }}</h4>
+                        <p><strong>Question:</strong> {{ quiz.question|truncatechars:100 }}</p>
+                        <p><strong>Correct Answer:</strong> {{ quiz.correct_answer }}</p>
+                        {% if quiz.explanation %}
+                            <p><strong>Explanation:</strong> {{ quiz.explanation|truncatechars:80 }}</p>
+                        {% endif %}
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <a href="{% url 'edit_training_quiz' quiz.id %}" class="btn btn-primary">Edit</a>
+                        <form method="post" action="{% url 'delete_training_quiz' quiz.id %}" style="display: inline;" onsubmit="return confirm('Hapus quiz ini?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <h4>No quiz questions added yet</h4>
+                    <p>Add multiple choice questions to test driver knowledge</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

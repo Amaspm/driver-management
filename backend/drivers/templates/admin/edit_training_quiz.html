@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Quiz - {{ quiz.module.title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .title { color: #dc3545; font-size: 24px; font-weight: bold; }
+        .nav-btn { background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+        .form-group textarea { height: 80px; resize: vertical; }
+        .form-group textarea.large { height: 120px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; margin-right: 10px; }
+        .form-actions { margin-top: 30px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .option-group { display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Edit Quiz</h1>
+        <div>
+            <a href="{% url 'training_module_detail' quiz.module.id %}" class="nav-btn">Back to Module</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="question">Question</label>
+                    <textarea id="question" name="question" class="large" required>{{ quiz.question }}</textarea>
+                </div>
+                
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="option_a">Option A</label>
+                        <textarea id="option_a" name="option_a" required>{{ quiz.option_a }}</textarea>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="option_b">Option B</label>
+                        <textarea id="option_b" name="option_b" required>{{ quiz.option_b }}</textarea>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="option_c">Option C</label>
+                        <textarea id="option_c" name="option_c" required>{{ quiz.option_c }}</textarea>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="option_d">Option D</label>
+                        <textarea id="option_d" name="option_d" required>{{ quiz.option_d }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="correct_answer">Correct Answer</label>
+                    <select id="correct_answer" name="correct_answer" required>
+                        <option value="A" {% if quiz.correct_answer == 'A' %}selected{% endif %}>A</option>
+                        <option value="B" {% if quiz.correct_answer == 'B' %}selected{% endif %}>B</option>
+                        <option value="C" {% if quiz.correct_answer == 'C' %}selected{% endif %}>C</option>
+                        <option value="D" {% if quiz.correct_answer == 'D' %}selected{% endif %}>D</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="explanation">Explanation</label>
+                    <textarea id="explanation" name="explanation">{{ quiz.explanation }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="order">Question Order</label>
+                    <input type="number" id="order" name="order" value="{{ quiz.order }}" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="points">Points</label>
+                    <input type="number" id="points" name="points" value="{{ quiz.points }}" min="1">
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'training_module_detail' quiz.module.id %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

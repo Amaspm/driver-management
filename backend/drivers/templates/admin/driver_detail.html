@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Detail - {{ driver.nama }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .title { color: #dc3545; font-size: 24px; font-weight: bold; }
+        .back-btn { background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { padding: 20px; border-bottom: 1px solid #dee2e6; font-weight: 600; color: #495057; }
+        .card-body { padding: 20px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .info-item { margin-bottom: 15px; }
+        .info-label { font-weight: 600; color: #495057; margin-bottom: 5px; }
+        .info-value { color: #6c757d; }
+        .photos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .photo-item { text-align: center; }
+        .photo-label { font-weight: 600; color: #495057; margin-bottom: 10px; }
+        .photo-container { border: 2px solid #dee2e6; border-radius: 8px; padding: 10px; background: #f8f9fa; }
+        .photo-container img { max-width: 100%; height: 200px; object-fit: cover; border-radius: 4px; }
+        .no-photo { color: #6c757d; padding: 40px; font-style: italic; }
+        .status { padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase; display: inline-block; }
+        .status.active { background: #28a745; color: white; }
+        .status.pending { background: #ffc107; color: #212529; }
+        .status.suspended { background: #dc3545; color: white; }
+        .status.rejected { background: #6c757d; color: white; }
+        .actions { display: flex; gap: 15px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-primary { background: #007bff; color: white; }
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal-content { background-color: white; margin: 2% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; }
+        .document-modal-content { background-color: white; margin: 2% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        .document-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .document-image-container { flex: 1; max-width: 50%; }
+        .document-details { flex: 1; }
+        .document-image { width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: transform 0.2s; }
+        .document-image:hover { transform: scale(1.02); }
+        .zoom-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); }
+        .zoom-content { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        .zoom-image { max-width: 95%; max-height: 95%; object-fit: contain; }
+        .zoom-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+        .zoom-close:hover { color: #ccc; }
+        @media (max-width: 768px) {
+            .document-layout { flex-direction: column; }
+            .document-image-container { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Driver Detail - {{ driver.nama }}</h1>
+        <a href="/dashboard/" class="back-btn">← Back to Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                Driver Information
+                <span class="status {{ driver.status }}" style="float: right;">{{ driver.status }}</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div>
+                        <div class="info-item">
+                            <div class="info-label">Nama Lengkap</div>
+                            <div class="info-value">{{ driver.nama }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">{{ driver.email }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">No. HP</div>
+                            <div class="info-value">{{ driver.no_hp }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">NIK</div>
+                            <div class="info-value">{{ driver.nik }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Tanggal Lahir</div>
+                            <div class="info-value">{{ driver.ttl|date:"d M Y" }}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="info-item">
+                            <div class="info-label">No. SIM</div>
+                            <div class="info-value">{{ driver.no_sim }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Jenis SIM</div>
+                            <div class="info-value">{{ driver.jenis_sim }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">No. BPJS</div>
+                            <div class="info-value">{{ driver.no_bpjs }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Kota</div>
+                            <div class="info-value">{{ driver.alamat }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Waktu Daftar</div>
+                            <div class="info-value">{{ driver.wkt_daftar|date:"d M Y H:i" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Bank Account</div>
+                            <div class="info-value">
+                                <strong>Bank:</strong> {{ driver.nama_bank|default:"Belum diisi" }}<br>
+                                <strong>No. Rekening:</strong> {{ driver.nomor_rekening|default:"Belum diisi" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Kontak Darurat</div>
+                    <div class="info-value">
+                        <strong>Nama:</strong> {{ driver.nama_kontak_darurat }}<br>
+                        <strong>Hubungan:</strong> {{ driver.hubungan_kontak_darurat }}<br>
+                        <strong>Nomor:</strong> {{ driver.nomor_kontak_darurat }}
+                    </div>
+                </div>
+                
+                {% if driver.alasan_penolakan %}
+                <div class="info-item" style="margin-top: 20px; padding: 15px; background: #f8d7da; border-radius: 4px;">
+                    <div class="info-label" style="color: #721c24;">Alasan Penolakan</div>
+                    <div class="info-value" style="color: #721c24;">{{ driver.alasan_penolakan }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Dokumen Lainnya</div>
+            <div class="card-body">
+                <div class="photos-grid">
+                    <div class="photo-item">
+                        <div class="photo-label">KTP</div>
+                        <div class="photo-container" style="cursor: pointer;" onclick="showDocumentModal('ktp', '{{ driver.nik }}', '', '', '{{ driver.foto_ktp|default:"" }}')">
+                            {% if driver.foto_ktp %}
+                                <img src="data:image/jpeg;base64,{{ driver.foto_ktp }}" alt="Foto KTP">
+                            {% else %}
+                                <div class="no-photo">KTP belum diupload</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <div class="photo-label">SIM</div>
+                        <div class="photo-container" style="cursor: pointer;" onclick="showDocumentModal('sim', '{{ driver.no_sim }}', '{{ driver.jenis_sim }}', '{{ driver.tanggal_kedaluarsa_sim|default:"" }}', '{{ driver.foto_sim|default:"" }}')">
+                            {% if driver.foto_sim %}
+                                <img src="data:image/jpeg;base64,{{ driver.foto_sim }}" alt="Foto SIM">
+                            {% else %}
+                                <div class="no-photo">SIM belum diupload</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <div class="photo-label">Foto Profil</div>
+                        <div class="photo-container" style="cursor: pointer;" onclick="showDocumentModal('profil', '{{ driver.nama }}', '', '', '{{ driver.foto_profil|default:"" }}')">
+                            {% if driver.foto_profil %}
+                                <img src="data:image/jpeg;base64,{{ driver.foto_profil }}" alt="Foto Profil">
+                            {% else %}
+                                <div class="no-photo">Foto Profil belum diupload</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <div class="photo-label">Sertifikat</div>
+                        <div class="photo-container" style="cursor: pointer;" onclick="showDocumentModal('sertifikat', '{{ driver.no_sertifikat|default:"" }}', '', '{{ driver.tanggal_kedaluarsa_sertifikat|default:"" }}', '{{ driver.foto_sertifikat|default:"" }}')">
+                            {% if driver.foto_sertifikat %}
+                                <img src="data:image/jpeg;base64,{{ driver.foto_sertifikat }}" alt="Foto Sertifikat">
+                            {% else %}
+                                <div class="no-photo">Sertifikat belum diupload</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <div class="photo-label">BPJS</div>
+                        <div class="photo-container" style="cursor: pointer;" onclick="showDocumentModal('bpjs', '{{ driver.no_bpjs }}', '', '{{ driver.tanggal_kedaluarsa_bpjs|default:"" }}', '{{ driver.foto_bpjs|default:"" }}')">
+                            {% if driver.foto_bpjs %}
+                                <img src="data:image/jpeg;base64,{{ driver.foto_bpjs }}" alt="Foto BPJS">
+                            {% else %}
+                                <div class="no-photo">BPJS belum diupload</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Verifikasi Driver</div>
+            <div class="card-body">
+                <div class="actions">
+                    {% if driver.status == 'pending' %}
+                        <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn btn-success">✓ Terima Driver</button>
+                        </form>
+                        
+                        <button type="button" class="btn btn-danger" onclick="openRejectModal()">✗ Tolak Driver</button>
+                    {% endif %}
+                    
+                    {% if driver.status == 'active' %}
+                        <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="suspend">
+                            <button type="submit" class="btn btn-danger">Suspend Driver</button>
+                        </form>
+                    {% endif %}
+                    
+                    {% if driver.status == 'suspended' %}
+                        <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="activate">
+                            <button type="submit" class="btn btn-success">Aktifkan Driver</button>
+                        </form>
+                    {% endif %}
+                    
+                    {% if driver.status == 'rejected' %}
+                        <form method="post" action="{% url 'update_driver_status' driver.id_driver %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn btn-success">Terima Driver</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRejectModal()">&times;</span>
+            <h3>Tolak Driver</h3>
+            <form method="post" action="{% url 'update_driver_status' driver.id_driver %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+                
+                <div class="form-group">
+                    <label>Pilih alasan penolakan:</label>
+                    <div style="margin: 10px 0;">
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="KTP tidak valid"> KTP tidak valid</label>
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="SIM tidak valid"> SIM tidak valid</label>
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="BPJS tidak valid"> BPJS tidak valid</label>
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="Sertifikat tidak valid"> Sertifikat tidak valid</label>
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="Foto profil tidak valid"> Foto profil tidak valid</label>
+                        <label style="display: block; margin: 5px 0;"><input type="checkbox" name="rejection_reasons" value="Data tidak lengkap"> Data tidak lengkap</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alasan_penolakan">Alasan tambahan (Opsional):</label>
+                    <textarea name="alasan_penolakan" id="alasan_penolakan" class="form-control" rows="3" placeholder="Masukkan alasan tambahan..."></textarea>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn" onclick="closeRejectModal()" style="background: #6c757d; color: white; margin-right: 10px;">Batal</button>
+                    <button type="submit" class="btn btn-danger">Tolak Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Document Modal -->
+    <div id="documentModal" class="modal">
+        <div class="document-modal-content">
+            <span class="close" onclick="closeDocumentModal()">&times;</span>
+            <h2 id="modalTitle">Document Details</h2>
+            <div id="modalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Zoom Modal -->
+    <div id="zoomModal" class="zoom-modal">
+        <div class="zoom-content">
+            <span class="zoom-close" onclick="closeZoomModal()">&times;</span>
+            <img id="zoomImage" class="zoom-image" src="" alt="Zoomed Image">
+        </div>
+    </div>
+    
+    <script>
+        function showDocumentModal(type, number, jenis, expiry, photo) {
+            const modal = document.getElementById('documentModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            let titleText = '';
+            let contentHtml = '';
+            
+            switch(type) {
+                case 'ktp':
+                    titleText = 'Detail KTP';
+                    contentHtml = `
+                        <div class="document-layout">
+                            ${photo ? `
+                                <div class="document-image-container">
+                                    <img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto KTP" onclick="openZoomModal('data:image/jpeg;base64,${photo}')">
+                                </div>
+                            ` : ''}
+                            <div class="document-details">
+                                <p><strong>NIK:</strong> ${number}</p>
+                                ${!photo ? '<p>Foto tidak tersedia</p>' : '<p><em>Klik gambar untuk memperbesar</em></p>'}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'sim':
+                    titleText = 'Detail SIM';
+                    contentHtml = `
+                        <div class="document-layout">
+                            ${photo ? `
+                                <div class="document-image-container">
+                                    <img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto SIM" onclick="openZoomModal('data:image/jpeg;base64,${photo}')">
+                                </div>
+                            ` : ''}
+                            <div class="document-details">
+                                <p><strong>Nomor SIM:</strong> ${number}</p>
+                                <p><strong>Jenis SIM:</strong> ${jenis}</p>
+                                <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                                ${!photo ? '<p>Foto tidak tersedia</p>' : '<p><em>Klik gambar untuk memperbesar</em></p>'}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'profil':
+                    titleText = 'Foto Profil';
+                    contentHtml = `
+                        <div class="document-layout">
+                            ${photo ? `
+                                <div class="document-image-container">
+                                    <img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto Profil" onclick="openZoomModal('data:image/jpeg;base64,${photo}')">
+                                </div>
+                            ` : ''}
+                            <div class="document-details">
+                                <p><strong>Nama:</strong> ${number}</p>
+                                ${!photo ? '<p>Foto tidak tersedia</p>' : '<p><em>Klik gambar untuk memperbesar</em></p>'}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'sertifikat':
+                    titleText = 'Detail Sertifikat';
+                    contentHtml = `
+                        <div class="document-layout">
+                            ${photo ? `
+                                <div class="document-image-container">
+                                    <img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto Sertifikat" onclick="openZoomModal('data:image/jpeg;base64,${photo}')">
+                                </div>
+                            ` : ''}
+                            <div class="document-details">
+                                <p><strong>Nomor Sertifikat:</strong> ${number || 'Tidak ada data'}</p>
+                                <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                                ${!photo ? '<p>Foto tidak tersedia</p>' : '<p><em>Klik gambar untuk memperbesar</em></p>'}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'bpjs':
+                    titleText = 'Detail BPJS';
+                    contentHtml = `
+                        <div class="document-layout">
+                            ${photo ? `
+                                <div class="document-image-container">
+                                    <img src="data:image/jpeg;base64,${photo}" class="document-image" alt="Foto BPJS" onclick="openZoomModal('data:image/jpeg;base64,${photo}')">
+                                </div>
+                            ` : ''}
+                            <div class="document-details">
+                                <p><strong>Nomor BPJS:</strong> ${number}</p>
+                                <p><strong>Tanggal Kedaluarsa:</strong> ${expiry || 'Tidak ada data'}</p>
+                                ${!photo ? '<p>Foto tidak tersedia</p>' : '<p><em>Klik gambar untuk memperbesar</em></p>'}
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            title.textContent = titleText;
+            content.innerHTML = contentHtml;
+            modal.style.display = 'block';
+        }
+        
+        function closeDocumentModal() {
+            document.getElementById('documentModal').style.display = 'none';
+        }
+        
+        function openZoomModal(imageSrc) {
+            const zoomModal = document.getElementById('zoomModal');
+            const zoomImage = document.getElementById('zoomImage');
+            zoomImage.src = imageSrc;
+            zoomModal.style.display = 'block';
+        }
+        
+        function closeZoomModal() {
+            document.getElementById('zoomModal').style.display = 'none';
+        }
+        function openRejectModal() {
+            document.getElementById('rejectModal').style.display = 'block';
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            var rejectModal = document.getElementById('rejectModal');
+            var documentModal = document.getElementById('documentModal');
+            var zoomModal = document.getElementById('zoomModal');
+            if (event.target == rejectModal) {
+                rejectModal.style.display = 'none';
+            }
+            if (event.target == documentModal) {
+                documentModal.style.display = 'none';
+            }
+            if (event.target == zoomModal) {
+                zoomModal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+# 🔄 Algoritma Alur Order → Driver (Realtime)
+
+### 1. User Checkout
+
+```
+User pilih barang + alamat tujuan
+Sistem buat order baru:
+    status = "MENUNGGU KONFIRMASI PENJUAL"
+    data: order_id, barang, pickup, tujuan, kota
+```
+
+---
+
+### 2. Penjual Konfirmasi Barang
+
+```
+Penjual klik "Barang Siap"
+Update order.status = "MENUNGGU DRIVER"
+Trigger event "order_request" → publish ke Kafka
+```
+
+---
+
+### 3. Cari Driver Online
+
+```
+Consumer (Golang service) terima order_request
+Cari driver dengan:
+    driver.kota == order.kota
+    driver.status == online
+    last_seen (heartbeat) <= 10–20 detik
+Jika ada → push order ke driver (via WebSocket/stream ke Flutter)
+Jika tidak ada → order tetap "MENUNGGU DRIVER"
+```
+
+---
+
+### 4. Driver Terima/Abaikan Order
+
+```
+Driver app tampilkan notifikasi order (pickup, tujuan, fee dummy)
+Jika driver klik "Terima":
+    Publish ke Kafka topic "order_response"
+    Update Django API:
+        order.status = "SEDANG DIKIRIM"
+        order.driver_id = driver_id
+Jika driver klik "Abaikan":
+    Publish order_response (abaikan)
+    Sistem bisa broadcast ke driver lain
+```
+
+---
+
+### 5. Update Status ke Semua Pihak
+
+```
+Jika order.status berubah:
+    User lihat: "Sedang Dikirim"
+    Penjual lihat: "Sedang Dikirim"
+    Admin (opsional) lihat semua order + status
+```
+
+---
+
+# 📌 Ringkas Flow
+
+1. User checkout → buat order.
+2. Penjual konfirmasi → order masuk Kafka.
+3. Golang service → cari driver online → push notifikasi.
+4. Driver terima → update order ke Django.
+5. Semua pihak dapat update status.
+
+

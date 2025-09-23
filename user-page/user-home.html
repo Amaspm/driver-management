@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home - Driver Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Driver Management - User</h1>
+            <a href="login.html" class="bg-blue-700 px-4 py-2 rounded hover:bg-blue-800">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8 px-4">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6 text-center">Pesan Barang</h2>
+            
+            <form id="orderForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Pilih Barang:</label>
+                    <select id="barang" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Pilih Barang --</option>
+                        <option value="barang-a">Barang A</option>
+                        <option value="barang-b">Barang B</option>
+                        <option value="barang-c">Barang C</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Alamat Tujuan:</label>
+                    <select id="kota" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Pilih Kota --</option>
+                        <option value="Jakarta">Jakarta</option>
+                        <option value="Bandung">Bandung</option>
+                        <option value="Surabaya">Surabaya</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition duration-200">
+                    Checkout
+                </button>
+            </form>
+        </div>
+
+        <div class="max-w-md mx-auto mt-6 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-bold mb-4">Status Pesanan</h3>
+            <div id="orderStatus" class="text-gray-600">
+                Belum ada pesanan
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const barang = document.getElementById('barang').value;
+            const kota = document.getElementById('kota').value;
+            
+            if (!barang || !kota) {
+                alert('Pilih barang dan kota tujuan!');
+                return;
+            }
+            
+            try {
+                // Send to Django backend
+                const response = await fetch('http://localhost:8001/api/order/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        barang: barang,
+                        kota: kota
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Store order data
+                    const orderData = {
+                        order_id: result.order_id,
+                        barang: barang,
+                        kota: kota,
+                        status: 'MENUNGGU KONFIRMASI PENJUAL',
+                        timestamp: new Date().toLocaleString()
+                    };
+                    
+                    localStorage.setItem('currentOrder', JSON.stringify(orderData));
+                    updateOrderStatus();
+                    alert('Pesanan berhasil dibuat!');
+                } else {
+                    alert('Gagal membuat pesanan');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function updateOrderStatus() {
+            const order = JSON.parse(localStorage.getItem('currentOrder'));
+            const statusDiv = document.getElementById('orderStatus');
+            
+            if (order) {
+                statusDiv.innerHTML = `
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <p><strong>Barang:</strong> ${order.barang}</p>
+                        <p><strong>Tujuan:</strong> ${order.kota}</p>
+                        <p><strong>Status:</strong> <span class="text-orange-600">${order.status}</span></p>
+                        <p><strong>Waktu:</strong> ${order.timestamp}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load order status on page load
+        window.onload = function() {
+            updateOrderStatus();
+        };
+    </script>
+</body>
+</html>
