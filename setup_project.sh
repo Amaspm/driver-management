@@ -183,8 +183,12 @@ main() {
     # Update Flutter configuration
     update_flutter_ip
     
+    # Setup sample data
+    print_status "Setting up sample data..."
+    python3 setup_sample_data.py
+    
     # Create superuser (optional)
-    read -p "Do you want to create a Django superuser? (y/n): " -n 1 -r
+    read -p "Do you want to create additional Django superuser? (y/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         create_superuser
@@ -205,6 +209,8 @@ main() {
     echo "To start the system: docker-compose up -d"
     echo "To stop the system: docker-compose down"
     echo "To view logs: docker-compose logs -f"
+    echo "To export database: ./export_database.sh"
+    echo "To import database: ./import_database.sh"
 }
 
 # Run main function
