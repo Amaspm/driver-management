@@ -1,0 +1,95 @@
+name: Podman CI/CD Pipeline
+
+on:
+  push:
+    branches: [ podman-migration ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  podman-backend-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Podman
+      run: |
+        sudo apt update
+        sudo apt install -y podman podman-compose
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Start PostgreSQL with Podman
+      run: |
+        podman run -d --name test-postgres \
+          -e POSTGRES_PASSWORD=postgres123 \
+          -e POSTGRES_DB=driver_management_test \
+          -p 5432:5432 \
+          postgres:15
+    
+    - name: Run Django tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres123@localhost:5432/driver_management_test
+      run: |
+        cd backend
+        python manage.py test
+
+  podman-build-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Podman
+      run: |
+        sudo apt update
+        sudo apt install -y podman podman-compose
+    
+    - name: Build backend with Podman
+      run: |
+        podman build -t driver-management-backend ./backend
+    
+    - name: Build driver service with Podman
+      run: |
+        podman build -t driver-management-driver-service ./driver-service
+    
+    - name: Test Podman Compose
+      run: |
+        podman-compose -f podman-compose.yml config
+
+  podman-integration-test:
+    runs-on: ubuntu-latest
+    needs: [podman-backend-tests, podman-build-test]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Podman
+      run: |
+        sudo apt update
+        sudo apt install -y podman podman-compose
+    
+    - name: Start services with Podman
+      run: |
+        podman-compose -f podman-compose.yml up -d db backend
+    
+    - name: Wait for services
+      run: sleep 30
+    
+    - name: Test API endpoint
+      run: |
+        curl -f http://localhost:8001/api/ || exit 1
+    
+    - name: Cleanup
+      run: |
+        podman-compose -f podman-compose.yml down

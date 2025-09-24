@@ -158,6 +158,7 @@ driver_manajement_project/
 - [📖 Development Guide](DEVELOPMENT.md) - Comprehensive development workflow
 - [📋 Project Guide](PROJECT_GUIDE.md) - Detailed project documentation
 - [🔧 API Documentation](http://localhost:8001/api/docs/) - Interactive API docs
+- [🚀 Podman Migration](PODMAN_MIGRATION.md) - Migration guide from Docker to Podman
 
 ## 🧪 Testing
 
